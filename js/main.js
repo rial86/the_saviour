@@ -789,7 +789,7 @@ function renderActor(actor_canvas,actor,sprite_x,sprite_step) {
     if (i_footprint<3) {
       footprint_x = 2;
     }
-    ctx.drawImage(images.footprints,footprint_x*sprite.footprint_width,footprint_y*sprite.footprint_height,sprite.footprint_width,sprite.footprint_height,actor.footprint[i_footprint].pos_x+camera_view.pos_x,actor.footprint[i_footprint].pos_y+camera_view.pos_y,sprite.footprint_width,sprite.footprint_height);
+    ctx.drawImage(images.footprints,footprint_x*sprite.footprint_width,footprint_y*sprite.footprint_height,sprite.footprint_width,sprite.footprint_height,actor.footprint[i_footprint].pos_x+camera_view.pos_x,actor.footprint[i_footprint].pos_y+camera_view.pos_y+15,sprite.footprint_width,sprite.footprint_height);
   }
   //ACTOR MODEL
   var sprite_y;
