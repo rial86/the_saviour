@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>THE SAVIOUR</title>
+  <link rel="stylesheet" href="css/the_saviour.css">
+  <link href="https://fonts.googleapis.com/css?family=Rye&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div id="game">
+    <div id="game_menu">
+      <h1>THE SAVIOUR</h1>
+    </div>
+    <div id="game_frame">
+      <canvas id="map" width="600" height="450">GAME ENGINE NOT SUPPORTED.</canvas>
+      <canvas id="blood" width="600" height="450">GAME ENGINE NOT SUPPORTED.</canvas>
+      <canvas id="grave" width="600" height="450">GAME ENGINE NOT SUPPORTED.</canvas>
+      <canvas id="obstacles" width="600" height="450">GAME ENGINE NOT SUPPORTED.</canvas>
+      <canvas id="char" width="600" height="450">GAME ENGINE NOT SUPPORTED.</canvas>
+      <canvas id="enemy" width="600" height="450">GAME ENGINE NOT SUPPORTED.</canvas>
+      <canvas id="hp" width="600" height="450">GAME ENGINE NOT SUPPORTED.</canvas>
+      <canvas id="bullets" width="600" height="450">GAME ENGINE NOT SUPPORTED.</canvas>
+    </div>
+    <div id="hud_top">
+      <p id="hud_alert"></p>
+    </div>
+    <div id="hud_mouseover">
+    </div>
+    <div id="hud_char_menu">
+      <div class="hud_char_menu_col_40">
+        <div id="hud_char_menu_stats">
+          <ul>
+            <li id="hud_char_menu_name"></li>
+            <li id="hud_char_menu_stat_vit">VITALITY</li>
+            <li id="hud_char_menu_stat_grt">GRIT</li>
+            <li id="hud_char_menu_stat_quk">QUICKNESS</li>
+            <li id="hud_char_menu_stat_acc">ACCURACY</li>
+            <li id="hud_char_menu_stat_skl">SKILL</li>
+          </ul>
+        </div>
+      </div>
+      <div class="hud_char_menu_col_10">
+        <div id="hud_char_menu_stats_value">
+          <ul>
+            <li id="hud_char_menu_name_value"><span id="hud_char_menu_level"></span><span id="hud_char_menu_level_points"></span></li>
+            <li><span id="hud_char_menu_stat_vit_value"></span><span id="levelup_vit" class="levelup_stat">+</span></li>
+            <li><span id="hud_char_menu_stat_grt_value"></span><span id="levelup_grt" class="levelup_stat">+</span></li>
+            <li><span id="hud_char_menu_stat_quk_value"></span><span id="levelup_quk" class="levelup_stat">+</span></li>
+            <li><span id="hud_char_menu_stat_acc_value"></span><span id="levelup_acc" class="levelup_stat">+</span></li>
+            <li><span id="hud_char_menu_stat_skl_value"></span><span id="levelup_skl" class="levelup_stat">+</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="hud_char_menu_col_50">
+        <div id="hud_char_menu_weapon">
+          <div class="hud_char_menu_row_20" id="hud_char_menu_weapon_info">WEAPON UPGRADES<span id="hud_char_menu_weapon_points"></span></div>
+          <div class="hud_char_menu_row_20">
+            <div class="hud_char_menu_col_12 weapon_mod_offset"></div>
+            <div class="hud_char_menu_col_12" style="border-left:1px solid black"></div>
+            <div class="hud_char_menu_col_12"></div>
+            <div class="hud_char_menu_col_12"></div>
+            <div class="hud_char_menu_col_12 weapon_mod">
+              <p class="hud_char_menu_weapon_mod_info" id="weapon_mod_barrel">CUTOFF BARREL</p>
+            </div>
+            <div class="hud_char_menu_col_12"></div>
+            <div class="hud_char_menu_col_12"></div>
+            <div class="hud_char_menu_col_12"></div>
+          </div>
+          <div class="clear"></div>
+          <div class="hud_char_menu_row_20">
+            <div class="hud_char_menu_col_12"></div>
+            <div class="hud_char_menu_col_12 weapon_mod">
+              <p class="hud_char_menu_weapon_mod_info" id="weapon_mod_bolt">RAPID BOLT</p>
+            </div>
+            <div class="hud_char_menu_col_12 weapon_mod_line_top weapon_mod_line_right"><img src="resources/gfx/rifle_inv.png"></div>
+            <div class="hud_char_menu_col_12 weapon_mod_line_right"></div>
+            <div class="hud_char_menu_col_12"></div>
+            <div class="hud_char_menu_col_12 weapon_mod_line_bot"></div>
+            <div class="hud_char_menu_col_12 weapon_mod">
+              <p class="hud_char_menu_weapon_mod_info" id="weapon_mod_second">SECOND BARREL</p>
+            </div>
+            <div class="hud_char_menu_col_12"></div>
+          </div>
+          <div class="clear"></div>
+          <div class="hud_char_menu_row_20">
+            <div class="hud_char_menu_col_12"></div>
+            <div class="hud_char_menu_col_12 weapon_mod">
+              <p class="hud_char_menu_weapon_mod_info" id="weapon_mod_grip">PADDED GRIP</p>
+            </div>
+            <div class="hud_char_menu_col_12 weapon_mod_line_bot"></div>
+            <div class="hud_char_menu_col_12"></div>
+            <div class="hud_char_menu_col_12"></div>
+            <div class="hud_char_menu_col_12"></div>
+            <div class="hud_char_menu_col_12"></div>
+            <div class="hud_char_menu_col_12"></div>
+          </div>
+          <div class="clear"></div>
+          <div class="hud_char_menu_row_20">
+            <div class="hud_char_menu_col_12 weapon_mod_offset"></div>
+            <div class="hud_char_menu_col_12"></div>
+            <div class="hud_char_menu_col_12"></div>
+            <div class="hud_char_menu_col_12"></div>
+            <div class="hud_char_menu_col_12"></div>
+            <div class="hud_char_menu_col_12 weapon_mod_line_bot weapon_mod_line_left"></div>
+            <div class="hud_char_menu_col_12 weapon_mod">
+              <p class="hud_char_menu_weapon_mod_info" id="weapon_mod_frame">BIGGER FRAME</p>
+            </div>
+            <div class="hud_char_menu_col_12"></div>
+          </div>
+          <div class="clear"></div>
+        </div>
+      </div>
+    </div>
+    <div id="hud_bottom">
+      <div id="hud_hp">
+        <div id="hud_hp_icons"></div>
+      </div>
+      <div id="hud_ammo"></div>
+      <div id="hud_xp"></div>
+    </div>
+  </div>
+  <script src="js/hud.js"></script>
+  <script src="js/level_data.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/main.js"></script>
+</body>
+
+</html>
