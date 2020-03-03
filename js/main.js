@@ -307,6 +307,7 @@ function createMap() {
   map.width = world[level].width;
   map.height = world[level].height;
   map.floor_data = world[level].floor_data;
+  map.object_data = world[level].object_data;
   map.enemy_count = world[level].enemy_count;
 }
 
@@ -745,10 +746,17 @@ function renderMap() {
   let end_row = start_row+Math.ceil(camera_view.width/sprite.map_width);
   for(i_col_nr=start_col;i_col_nr<=end_col;i_col_nr++) {
     for(i_row_nr=start_row;i_row_nr<=end_row;i_row_nr++) {
-      var value = map.floor_data[((i_col_nr*map.width/sprite.map_width)+i_row_nr)];
-      var source_y = Math.floor(value / 16) * sprite.map_height; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
-      var source_x = (value % 16) * sprite.map_width; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
+      //render floor
+      var value_floor_data = map.floor_data[((i_col_nr*map.width/sprite.map_width)+i_row_nr)];
+      var source_y = Math.floor(value_floor_data / 16) * sprite.map_height; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
+      var source_x = (value_floor_data % 16) * sprite.map_width; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
       ctx.drawImage(images.desert,source_x,source_y,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
+      //render objects
+      var value_object_data = map.object_data[((i_col_nr*map.width/sprite.map_width)+i_row_nr)];
+      var source_y = Math.floor(value_object_data / 16) * sprite.map_height; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
+      var source_x = (value_object_data % 16) * sprite.map_width; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
+      ctx.drawImage(images.desert,source_x,source_y,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
+
     }
   }
 
