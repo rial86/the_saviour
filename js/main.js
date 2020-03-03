@@ -8,7 +8,6 @@ const max_quickness = 10;//higher speed = more movement speed
 const max_accuracy = 10; //higher accuracy = more likely to hit where aimed
 const max_skill = 5;    //higher skill = higher skill up of gear
 const spawn_nr_obstacles = 100;
-const spawn_nr_enemies = 3;
 const damage_cooldown = 0.5;
 
 //------------------------------------------------------------------------------
@@ -19,7 +18,9 @@ let level = 1;
 let map = {
   width:null,
   height:null,
-  data:null
+  floor_data:null,
+  object_data:null,
+  enemy_count:null
 };
 let game_state = 0; // 0 = preload / 1 = start_menu / 2 = play / 3 = gameover
 let preload_started = false;
@@ -120,8 +121,8 @@ let wildlife = [];
 let sprite = {
   chars_width:48,
   chars_height:48,
-  map_width:40,
-  map_height:40,
+  map_width:32,
+  map_height:32,
   blood_width:512,
   blood_height:512,
   obstacle_cactus_width:26,
@@ -305,7 +306,8 @@ function init() {
 function createMap() {
   map.width = world[level].width;
   map.height = world[level].height;
-  map.data = world[level].data;
+  map.floor_data = world[level].floor_data;
+  map.enemy_count = world[level].enemy_count;
 }
 
 function createObstacles() {
@@ -342,7 +344,7 @@ function createObstacles() {
 }
 
 function createEnemies() {
-  for(i_create_enemies=0;i_create_enemies<spawn_nr_enemies;i_create_enemies++) {
+  for(i_create_enemies=0;i_create_enemies<map.enemy_count;i_create_enemies++) {
     enemy.push({
       hp_max:5,
       hp:5,
@@ -743,20 +745,10 @@ function renderMap() {
   let end_row = start_row+Math.ceil(camera_view.width/sprite.map_width);
   for(i_col_nr=start_col;i_col_nr<=end_col;i_col_nr++) {
     for(i_row_nr=start_row;i_row_nr<=end_row;i_row_nr++) {
-      switch(map.data[((i_col_nr*map.width/sprite.map_width)+i_row_nr)]) {
-        case 0:
-        ctx.drawImage(images.desert,0,0,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
-        break;
-        case 1:
-        ctx.drawImage(images.desert,0,40,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
-        break;
-        case 2:
-        ctx.drawImage(images.desert,0,80,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
-        break;
-        case 3:
-        ctx.drawImage(images.desert,0,120,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
-        break;
-      }
+      var value = map.floor_data[((i_col_nr*map.width/sprite.map_width)+i_row_nr)];
+      var source_y = Math.floor(value / 16) * sprite.map_height; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
+      var source_x = (value % 16) * sprite.map_width; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
+      ctx.drawImage(images.desert,source_x,source_y,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
     }
   }
 
