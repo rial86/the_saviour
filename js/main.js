@@ -20,6 +20,7 @@ let map = {
   height:null,
   floor_data:null,
   object_data:null,
+  collission_data:null,
   enemy_count:null
 };
 let game_state = 0; // 0 = preload / 1 = start_menu / 2 = play / 3 = gameover
@@ -125,10 +126,8 @@ let sprite = {
   map_height:32,
   blood_width:512,
   blood_height:512,
-  obstacle_cactus_width:26,
-  obstacle_cactus_height:40,
-  obstacle_stone_width:30,
-  obstacle_stone_height:16,
+  obstacle_width:32,
+  obstacle_height:32,
   grave_width:22,
   grave_height:32,
   scorpion_width:6,
@@ -179,7 +178,7 @@ let weapon_upgrade_state = false;
 //PRELOAD-----------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-let images = ["blood","chars1","desert","footprints","grave","hp_empty","hp_full","obstacle1","obstacle2","rifle_inv","scorpion"];
+let images = ["blood","chars1","desert","mines","footprints","grave","hp_empty","hp_full","rifle_inv","scorpion"];
 let audio = ["ammo_pickup","hit","hit_obstacle","levelup","no_ammo","reload","reload_revolver","shot_revolver","shot_rifle"];
 let assets_to_load = images.length + audio.length;
 
@@ -308,40 +307,34 @@ function createMap() {
   map.height = world[level].height;
   map.floor_data = world[level].floor_data;
   map.object_data = world[level].object_data;
+  map.collission_data = world[level].collission_data;
   map.enemy_count = world[level].enemy_count;
 }
 
 function createObstacles() {
-  for(i_create_obstacles=0;i_create_obstacles<spawn_nr_obstacles;i_create_obstacles++) {
-    var obstacle_type;
-    var obstacle_image;
-    var obstacle_width;
-    var obstacle_height;
-    var obstacle_type_roll = roll(2);
-    if (obstacle_type_roll == 1) {
-      obstacle_type = "cactus";
-      obstacle_image = images.obstacle1;
-      obstacle_width = sprite.obstacle_cactus_width;
-      obstacle_height = sprite.obstacle_cactus_height;
-      obstacle_bulletproof = true;
+    var value_obstacle_number;
+    var value_obstacle_data;
+    var value_obstacle_data_x;
+    var value_obstacle_data_y;
+    for(i_col_nr=0;i_col_nr<map.width/sprite.map_width;i_col_nr++) {
+      for(i_row_nr=0;i_row_nr<map.height/sprite.map_height;i_row_nr++) {
+        if (map.collission_data[((i_col_nr*map.width/sprite.map_width)+i_row_nr)] == 0) {
+          value_obstacle_number = ((i_col_nr*map.width/sprite.map_width)+i_row_nr);
+          value_obstacle_data = map.collission_data[((i_col_nr*map.width/sprite.map_width)+i_row_nr)];
+          value_obstacle_data_x = (value_obstacle_number % (map.width/sprite.map_width) * sprite.obstacle_width);
+          value_obstacle_data_y = Math.floor(value_obstacle_number/(map.width/sprite.map_width)) * sprite.obstacle_height;
+          obstacle.push({
+            id:value_obstacle_number,
+            data:value_obstacle_data,
+            pos_x:value_obstacle_data_x,
+            pos_y:value_obstacle_data_y,
+            width:sprite.obstacle_width,
+            height:sprite.obstacle_height,
+            bulletproof:true
+          });
+        }
+      }
     }
-    if (obstacle_type_roll == 2) {
-      obstacle_type = "stone";
-      obstacle_image = images.obstacle2;
-      obstacle_width = sprite.obstacle_stone_width;
-      obstacle_height = sprite.obstacle_stone_height;
-      obstacle_bulletproof = false;
-    }
-    obstacle.push({
-      type:obstacle_type,
-      image:obstacle_image,
-      pos_x:roll(map.width),
-      pos_y:roll(map.height),
-      width:obstacle_width,
-      height:obstacle_height,
-      bulletproof:obstacle_bulletproof
-    });
-  }
 }
 
 function createEnemies() {
@@ -509,15 +502,39 @@ function stepActor(actor) {
   if (!actor.stop) {
     if (actor.d_left) {
       actor.pos_x-=actor.speed;
+        //check movement collission with obstacles
+        for(i_check_col_object=0;i_check_col_object<obstacle.length;i_check_col_object++) {
+          if (collCheck(actor,obstacle[i_check_col_object]) == true) {
+            actor.pos_x+=actor.speed;
+          }
+        }
     }
     if (actor.d_right) {
       actor.pos_x+=actor.speed;
+      //check movement collission with obstacles
+      for(i_check_col_object=0;i_check_col_object<obstacle.length;i_check_col_object++) {
+        if (collCheck(actor,obstacle[i_check_col_object]) == true) {
+          actor.pos_x-=actor.speed;
+        }
+      }
     }
     if (actor.d_up) {
       actor.pos_y-=actor.speed;
+      //check movement collission with obstacles
+      for(i_check_col_object=0;i_check_col_object<obstacle.length;i_check_col_object++) {
+        if (collCheck(actor,obstacle[i_check_col_object]) == true) {
+          actor.pos_y+=actor.speed;
+        }
+      }
     }
     if (actor.d_down) {
       actor.pos_y+=actor.speed;
+      //check movement collission with obstacles
+      for(i_check_col_object=0;i_check_col_object<obstacle.length;i_check_col_object++) {
+        if (collCheck(actor,obstacle[i_check_col_object]) == true) {
+          actor.pos_y-=actor.speed;
+        }
+      }
     }
     if (!actor.d_left && !actor.d_right && !actor.d_up && !actor.d_down) {
       actor.stop = true;
@@ -577,7 +594,7 @@ function stepBullet(actor) {
       actor.shot.pos_x = null;
       actor.shot.pos_y = null;
     }
-    for(i_check_col_obstacle=0;i_check_col_obstacle<spawn_nr_obstacles;i_check_col_obstacle++) {
+    for(i_check_col_obstacle=0;i_check_col_obstacle<obstacle.length;i_check_col_obstacle++) {
       if(collCheck(actor.shot,obstacle[i_check_col_obstacle]) == true && obstacle[i_check_col_obstacle].bulletproof) {
         audio.hit_obstacle.play();
         actor.shot.pos_x = null;
@@ -689,7 +706,6 @@ function render() {
   clearCamera();
   renderMap();
   renderHud();
-  renderObstacles();
   renderGrave();
   renderBlood();
   renderActor("char",char,char.sprite_x,sprite_step);
@@ -726,10 +742,10 @@ function clearCamera() {
   canvas = document.getElementById("enemy");
   ctx = canvas.getContext("2d");
   ctx.clearRect(0,0,camera_view.width,camera_view.height);
-  canvas = document.getElementById("char");
+  canvas = document.getElementById("wildlife");
   ctx = canvas.getContext("2d");
   ctx.clearRect(0,0,camera_view.width,camera_view.height);
-  canvas = document.getElementById("obstacles");
+  canvas = document.getElementById("char");
   ctx = canvas.getContext("2d");
   ctx.clearRect(0,0,camera_view.width,camera_view.height);
   canvas = document.getElementById("map");
@@ -746,29 +762,36 @@ function renderMap() {
   let end_row = start_row+Math.ceil(camera_view.width/sprite.map_width);
   for(i_col_nr=start_col;i_col_nr<=end_col;i_col_nr++) {
     for(i_row_nr=start_row;i_row_nr<=end_row;i_row_nr++) {
+      var tileset;
+      if (level == 1) {
+        tileset = images.desert;
+      }
+      if (level == 2) {
+        tileset = images.mines;
+      }
       //render floor
       var value_floor_data = map.floor_data[((i_col_nr*map.width/sprite.map_width)+i_row_nr)];
       var source_y = Math.floor(value_floor_data / 16) * sprite.map_height; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
       var source_x = (value_floor_data % 16) * sprite.map_width; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
-      ctx.drawImage(images.desert,source_x,source_y,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
+      ctx.drawImage(tileset,source_x,source_y,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
       //render objects
       var value_object_data = map.object_data[((i_col_nr*map.width/sprite.map_width)+i_row_nr)];
       var source_y = Math.floor(value_object_data / 16) * sprite.map_height; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
       var source_x = (value_object_data % 16) * sprite.map_width; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
-      ctx.drawImage(images.desert,source_x,source_y,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
+      ctx.drawImage(tileset,source_x,source_y,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
 
     }
   }
 
 }
 
-function renderObstacles() {
+/*function renderObstacles() {
   let canvas = document.getElementById("obstacles");
   let ctx = canvas.getContext("2d");
   for (i_spawn_obstacles=0;i_spawn_obstacles<spawn_nr_obstacles;i_spawn_obstacles++) {
       ctx.drawImage(obstacle[i_spawn_obstacles].image,obstacle[i_spawn_obstacles].pos_x+camera_view.pos_x,obstacle[i_spawn_obstacles].pos_y+camera_view.pos_y, obstacle[i_spawn_obstacles].width, obstacle[i_spawn_obstacles].height);
   }
-}
+}*/
 
 function renderActor(actor_canvas,actor,sprite_x,sprite_step) {
   let canvas = document.getElementById(actor_canvas);
@@ -865,7 +888,7 @@ function renderGrave() {
 }
 
 function renderWildlife() {
-  let canvas = document.getElementById("obstacles");
+  let canvas = document.getElementById("wildlife");
   let ctx = canvas.getContext("2d");
   for(i_wildlife=0;i_wildlife<wildlife.length;i_wildlife++) {
     ctx.drawImage(images.scorpion,wildlife[i_wildlife].pos_x+camera_view.pos_x,wildlife[i_wildlife].pos_y+camera_view.pos_y,wildlife[i_wildlife].width,wildlife[i_wildlife].height);
