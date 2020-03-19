@@ -7,7 +7,6 @@ const max_grit = 10;     //higher grit = less damage
 const max_quickness = 10;//higher speed = more movement speed
 const max_accuracy = 10; //higher accuracy = more likely to hit where aimed
 const max_skill = 5;    //higher skill = higher skill up of gear
-const spawn_nr_obstacles = 100;
 const damage_cooldown = 0.5;
 
 //------------------------------------------------------------------------------
@@ -20,7 +19,8 @@ let map = {
   height:null,
   floor_data:null,
   object_data:null,
-  collission_data:null,
+  obstacle_data:null,
+  visibility_data:null,
   enemy_count:null
 };
 let game_state = 0; // 0 = preload / 1 = start_menu / 2 = play / 3 = gameover
@@ -51,8 +51,9 @@ let char = {
   d_up:false,
   d_down:false,
   stop:false,
-  pos_x:600,
-  pos_y:600,
+  pos_x:420,
+  pos_y:4700,
+  visibility: true,
   footprint: [],
   target_x:0,
   target_y:0,
@@ -142,6 +143,7 @@ let cursor_type = {
   reload: "none"
 }
 let obstacle = [];
+let visibility = [];
 let grave = [];
 let blood = {
   pos_x:[],
@@ -178,7 +180,7 @@ let weapon_upgrade_state = false;
 //PRELOAD-----------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-let images = ["blood","chars1","desert","mines","footprints","grave","hp_empty","hp_full","rifle_inv","scorpion"];
+let images = ["blood","chars1","tileset_map","footprints","grave","hp_empty","hp_full","rifle_inv","scorpion"];
 let audio = ["ammo_pickup","hit","hit_obstacle","levelup","no_ammo","reload","reload_revolver","shot_revolver","shot_rifle"];
 let assets_to_load = images.length + audio.length;
 
@@ -300,6 +302,7 @@ function init() {
   createObstacles();
   createEnemies();
   createWildlife();
+  createVisibility();
 }
 
 function createMap() {
@@ -307,7 +310,8 @@ function createMap() {
   map.height = world[level].height;
   map.floor_data = world[level].floor_data;
   map.object_data = world[level].object_data;
-  map.collission_data = world[level].collission_data;
+  map.obstacle_data = world[level].obstacle_data;
+  map.visibility_data = world[level].visibility_data;
   map.enemy_count = world[level].enemy_count;
 }
 
@@ -316,11 +320,11 @@ function createObstacles() {
     var value_obstacle_data;
     var value_obstacle_data_x;
     var value_obstacle_data_y;
-    for(i_col_nr=0;i_col_nr<map.width/sprite.map_width;i_col_nr++) {
-      for(i_row_nr=0;i_row_nr<map.height/sprite.map_height;i_row_nr++) {
-        if (map.collission_data[((i_col_nr*map.width/sprite.map_width)+i_row_nr)] == 0) {
-          value_obstacle_number = ((i_col_nr*map.width/sprite.map_width)+i_row_nr);
-          value_obstacle_data = map.collission_data[((i_col_nr*map.width/sprite.map_width)+i_row_nr)];
+    for(i_row_nr=0;i_row_nr<map.height/sprite.map_height;i_row_nr++) {
+      for(i_col_nr=0;i_col_nr<map.width/sprite.map_width;i_col_nr++) {
+        if (map.obstacle_data[((i_row_nr*map.width/sprite.map_width)+i_col_nr)] == 0) {
+          value_obstacle_number = ((i_row_nr*map.width/sprite.map_width)+i_col_nr);
+          value_obstacle_data = map.obstacle_data[((i_row_nr*map.width/sprite.map_width)+i_col_nr)];
           value_obstacle_data_x = (value_obstacle_number % (map.width/sprite.map_width) * sprite.obstacle_width);
           value_obstacle_data_y = Math.floor(value_obstacle_number/(map.width/sprite.map_width)) * sprite.obstacle_height;
           obstacle.push({
@@ -354,6 +358,7 @@ function createEnemies() {
       stop:false,
       pos_x:roll(map.width),
       pos_y:roll(map.height),
+      visibility: true,
       footprint:[],
       speed:1,
       accuracy:1,
@@ -401,6 +406,31 @@ function createWildlife() {
       width:sprite.scorpion_width,
       height:sprite.scorpion_height
     });
+  }
+}
+
+function createVisibility() {
+  var value_visibility_number;
+  var value_visibility_data;
+  var value_visibility_data_x;
+  var value_visibility_data_y;
+  for(i_row_nr=0;i_row_nr<map.height/sprite.map_height;i_row_nr++) {
+    for(i_col_nr=0;i_col_nr<map.width/sprite.map_width;i_col_nr++) {
+      if (map.visibility_data[((i_row_nr*map.width/sprite.map_width)+i_col_nr)] == 0) {
+        value_visibility_number = ((i_row_nr*map.width/sprite.map_width)+i_col_nr);
+        value_visibility_data = map.visibility_data[((i_row_nr*map.width/sprite.map_width)+i_col_nr)];
+        value_visibility_data_x = (value_visibility_number % (map.width/sprite.map_width) * sprite.obstacle_width);
+        value_visibility_data_y = Math.floor(value_visibility_number/(map.width/sprite.map_width)) * sprite.obstacle_height;
+        visibility.push({
+          id:value_visibility_number,
+          data:value_visibility_data,
+          pos_x:value_visibility_data_x,
+          pos_y:value_visibility_data_y,
+          width:sprite.obstacle_width,
+          height:sprite.obstacle_height
+        });
+      }
+    }
   }
 }
 
@@ -631,6 +661,13 @@ function stepCamera() {
 }
 
 function CollissionChecks() {
+  //CHECK VISIBILITY
+  char.visibility = true;
+  for(i_check_col_visibility=0;i_check_col_visibility<visibility.length;i_check_col_visibility++) {
+    if (collCheck(char,visibility[i_check_col_visibility]) == true) {
+      char.visibility = false;
+    }
+  }
   //CHECK CHAR AMMO PICKUP
   for (i_check_grave=0;i_check_grave<grave.length;i_check_grave++) {
     if(collCheck(char,grave[i_check_grave]) == true) {
@@ -762,89 +799,75 @@ function renderMap() {
   let end_row = start_row+Math.ceil(camera_view.width/sprite.map_width);
   for(i_col_nr=start_col;i_col_nr<=end_col;i_col_nr++) {
     for(i_row_nr=start_row;i_row_nr<=end_row;i_row_nr++) {
-      var tileset;
-      if (level == 1) {
-        tileset = images.desert;
-      }
-      if (level == 2) {
-        tileset = images.mines;
-      }
       //render floor
       var value_floor_data = map.floor_data[((i_col_nr*map.width/sprite.map_width)+i_row_nr)];
-      var source_y = Math.floor(value_floor_data / 16) * sprite.map_height; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
-      var source_x = (value_floor_data % 16) * sprite.map_width; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
-      ctx.drawImage(tileset,source_x,source_y,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
+      var source_y = Math.floor(value_floor_data / 56) * sprite.map_height; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
+      var source_x = (value_floor_data % 56) * sprite.map_width; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
+      ctx.drawImage(images.tileset_map,source_x,source_y,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
       //render objects
       var value_object_data = map.object_data[((i_col_nr*map.width/sprite.map_width)+i_row_nr)];
-      var source_y = Math.floor(value_object_data / 16) * sprite.map_height; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
-      var source_x = (value_object_data % 16) * sprite.map_width; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
-      ctx.drawImage(tileset,source_x,source_y,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
-
+      var source_y = Math.floor(value_object_data / 56) * sprite.map_height; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
+      var source_x = (value_object_data % 56) * sprite.map_width; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
+      ctx.drawImage(images.tileset_map,source_x,source_y,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
     }
   }
 
 }
 
-/*function renderObstacles() {
-  let canvas = document.getElementById("obstacles");
-  let ctx = canvas.getContext("2d");
-  for (i_spawn_obstacles=0;i_spawn_obstacles<spawn_nr_obstacles;i_spawn_obstacles++) {
-      ctx.drawImage(obstacle[i_spawn_obstacles].image,obstacle[i_spawn_obstacles].pos_x+camera_view.pos_x,obstacle[i_spawn_obstacles].pos_y+camera_view.pos_y, obstacle[i_spawn_obstacles].width, obstacle[i_spawn_obstacles].height);
-  }
-}*/
-
 function renderActor(actor_canvas,actor,sprite_x,sprite_step) {
-  let canvas = document.getElementById(actor_canvas);
-  let ctx = canvas.getContext("2d");
-  //ACTOR FOOTPRINTS
-  for(i_footprint=0;i_footprint<actor.footprint.length;i_footprint++) {
-    var footprint_y;
-    var footprint_x = 0;
-    if (actor.footprint[i_footprint].face == "left_right") {
-      footprint_y = footprints.footprints_y_left_right
+  if (actor.visibility) { //if actor is visible
+    let canvas = document.getElementById(actor_canvas);
+    let ctx = canvas.getContext("2d");
+    //ACTOR FOOTPRINTS
+    for(i_footprint=0;i_footprint<actor.footprint.length;i_footprint++) {
+      var footprint_y;
+      var footprint_x = 0;
+      if (actor.footprint[i_footprint].face == "left_right") {
+        footprint_y = footprints.footprints_y_left_right
+      }
+      if (actor.footprint[i_footprint].face == "up_down") {
+        footprint_y = footprints.footprints_y_up_down
+      }
+      if (i_footprint<5) {
+        footprint_x = 1;
+      }
+      if (i_footprint<3) {
+        footprint_x = 2;
+      }
+      ctx.drawImage(images.footprints,footprint_x*sprite.footprint_width,footprint_y*sprite.footprint_height,sprite.footprint_width,sprite.footprint_height,actor.footprint[i_footprint].pos_x+camera_view.pos_x,actor.footprint[i_footprint].pos_y+camera_view.pos_y+15,sprite.footprint_width,sprite.footprint_height);
     }
-    if (actor.footprint[i_footprint].face == "up_down") {
-      footprint_y = footprints.footprints_y_up_down
+    //ACTOR MODEL
+    var sprite_y;
+    if (actor.d_face == "left") {
+      sprite_y = actor.sprite_y_left
     }
-    if (i_footprint<5) {
-      footprint_x = 1;
+    if (actor.d_face == "right") {
+      sprite_y = actor.sprite_y_right
     }
-    if (i_footprint<3) {
-      footprint_x = 2;
+    if (actor.d_face == "up") {
+      sprite_y = actor.sprite_y_up
     }
-    ctx.drawImage(images.footprints,footprint_x*sprite.footprint_width,footprint_y*sprite.footprint_height,sprite.footprint_width,sprite.footprint_height,actor.footprint[i_footprint].pos_x+camera_view.pos_x,actor.footprint[i_footprint].pos_y+camera_view.pos_y+15,sprite.footprint_width,sprite.footprint_height);
-  }
-  //ACTOR MODEL
-  var sprite_y;
-  if (actor.d_face == "left") {
-    sprite_y = actor.sprite_y_left
-  }
-  if (actor.d_face == "right") {
-    sprite_y = actor.sprite_y_right
-  }
-  if (actor.d_face == "up") {
-    sprite_y = actor.sprite_y_up
-  }
-  if (actor.d_face == "down") {
-    sprite_y = actor.sprite_y_down
-  }
-  if (!actor.stop) {
-    sprite_x+=sprite_step;
-  }
-  if (actor.hit) {
-    ctx.fillStyle = hp_bar.color_dmg;
-    ctx.font = "bold 12px Rye";
-    if (actor != char) {
-      ctx.fillText(-(char.weapon.dmg+char.grit),actor.pos_x+camera_view.pos_x+actor.width,actor.pos_y+camera_view.pos_y-hp_bar.dmg_offset_y);
+    if (actor.d_face == "down") {
+      sprite_y = actor.sprite_y_down
     }
-    ctx.save();
-    var dx = Math.random()*10;
-    var dy = Math.random()*10;
-    ctx.translate(dx, dy);
-  }
-  ctx.drawImage(images.chars1,sprite_x*sprite.chars_width,sprite_y*sprite.chars_height,sprite.chars_width,sprite.chars_height,actor.pos_x+camera_view.pos_x,actor.pos_y+camera_view.pos_y,sprite.chars_width,sprite.chars_height);
-  if (actor.hit) {
-    ctx.restore();
+    if (!actor.stop) {
+      sprite_x+=sprite_step;
+    }
+    if (actor.hit) {
+      ctx.fillStyle = hp_bar.color_dmg;
+      ctx.font = "bold 12px Rye";
+      if (actor != char) {
+        ctx.fillText(-(char.weapon.dmg+char.grit),actor.pos_x+camera_view.pos_x+actor.width,actor.pos_y+camera_view.pos_y-hp_bar.dmg_offset_y);
+      }
+      ctx.save();
+      var dx = Math.random()*10;
+      var dy = Math.random()*10;
+      ctx.translate(dx, dy);
+    }
+    ctx.drawImage(images.chars1,sprite_x*sprite.chars_width,sprite_y*sprite.chars_height,sprite.chars_width,sprite.chars_height,actor.pos_x+camera_view.pos_x,actor.pos_y+camera_view.pos_y,sprite.chars_width,sprite.chars_height);
+    if (actor.hit) {
+      ctx.restore();
+    }
   }
 }
 

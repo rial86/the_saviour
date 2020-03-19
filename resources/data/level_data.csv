@@ -1,0 +1,6 @@
+level;name;floor_data_source;floor_data;object_data_source;object_data;collission_data_source;collission_data;enemy_count
+0;camp;;;;;;;
+1;desert;;;;;;;
+2;mines;;;;;;;
+3;canyon;;;;;;;
+4;old town;;;;;;;

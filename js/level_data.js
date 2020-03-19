@@ -1,27 +1,31 @@
 //DATA
 let world = [
   {level:0,
-   name:"town",
+   name:"camp",
    width:1200,
    height:600,
    floor_data_source:"./resources/maps/desert_floor.csv",
    floor_data:[], //gets populated through import -> see below
    object_data_source:"./resources/maps/desert_object.csv",
-   object_data:[],
-   collission_data_source:"./resources/maps/desert_collission.csv",
-   collission_data:[],
+   object_data:[], //gets populated through import -> see below
+   obstacle_data_source:"./resources/maps/desert_obstacle.csv",
+   obstacle_data:[], //gets populated through import -> see below
+   visibility_data_source:"./resources/maps/desert_visibility.csv",
+   visibility_data:[], //gets populated through import -> see below
    enemy_count:0
   },
   {level:1,
     name:"desert",
-    width:1152,
-    height:1152,
+    width:9600,
+    height:4800,
     floor_data_source:"./resources/maps/desert_floor.csv",
     floor_data:[], //gets populated through import -> see below
     object_data_source:"./resources/maps/desert_object.csv",
-    object_data:[],
-    collission_data_source:"./resources/maps/desert_collission.csv",
-    collission_data:[],
+    object_data:[], //gets populated through import -> see below
+    obstacle_data_source:"./resources/maps/desert_obstacle.csv",
+    obstacle_data:[], //gets populated through import -> see below
+    visibility_data_source:"./resources/maps/desert_visibility.csv",
+    visibility_data:[], //gets populated through import -> see below
     enemy_count:2
   },
   {level:2,
@@ -31,9 +35,11 @@ let world = [
     floor_data_source:"./resources/maps/mines_floor.csv",
     floor_data:[], //gets populated through import -> see below
     object_data_source:"./resources/maps/mines_object.csv",
-    object_data:[],
-    collission_data_source:"./resources/maps/mines_collission.csv",
-    collission_data:[],
+    object_data:[], //gets populated through import -> see below
+    obstacle_data_source:"./resources/maps/mines_obstacle.csv",
+    obstacle_data:[], //gets populated through import -> see below
+    visibility_data_source:"./resources/maps/desert_obstacle.csv",
+    visibility_data:[], //gets populated through import -> see below
     enemy_count:0
   }
     ]
@@ -58,13 +64,21 @@ let world = [
     xhttp_object_data.open("GET", world[1].object_data_source, true);
     xhttp_object_data.send();
 
-    var xhttp_collission_data = new XMLHttpRequest();
-    xhttp_collission_data.addEventListener("load", function() {
-      var arr  = xhttp_collission_data.responseText.replace(/\n/g,",").split(",");
-      world[1].collission_data = arr.map(Number);
+    var xhttp_obstacle_data = new XMLHttpRequest();
+    xhttp_obstacle_data.addEventListener("load", function() {
+      var arr  = xhttp_obstacle_data.responseText.replace(/\n/g,",").split(",");
+      world[1].obstacle_data = arr.map(Number);
     });
-    xhttp_collission_data.open("GET", world[1].collission_data_source, true);
-    xhttp_collission_data.send();
+    xhttp_obstacle_data.open("GET", world[1].obstacle_data_source, true);
+    xhttp_obstacle_data.send();
+
+    var xhttp_visibility_data = new XMLHttpRequest();
+    xhttp_visibility_data.addEventListener("load", function() {
+      var arr  = xhttp_visibility_data.responseText.replace(/\n/g,",").split(",");
+      world[1].visibility_data = arr.map(Number);
+    });
+    xhttp_visibility_data.open("GET", world[1].visibility_data_source, true);
+    xhttp_visibility_data.send();
 //  }
 //}
 
