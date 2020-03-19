@@ -12,6 +12,8 @@ let world = [
    obstacle_data:[], //gets populated through import -> see below
    visibility_data_source:"./resources/maps/desert_visibility.csv",
    visibility_data:[], //gets populated through import -> see below
+   spawn_data_source:"./resources/maps/desert_spawn.csv",
+   spawn_data:[], //gets populated through import -> see below
    enemy_count:0
   },
   {level:1,
@@ -26,6 +28,8 @@ let world = [
     obstacle_data:[], //gets populated through import -> see below
     visibility_data_source:"./resources/maps/desert_visibility.csv",
     visibility_data:[], //gets populated through import -> see below
+    spawn_data_source:"./resources/maps/desert_spawn.csv",
+    spawn_data:[], //gets populated through import -> see below
     enemy_count:2
   },
   {level:2,
@@ -40,6 +44,8 @@ let world = [
     obstacle_data:[], //gets populated through import -> see below
     visibility_data_source:"./resources/maps/desert_obstacle.csv",
     visibility_data:[], //gets populated through import -> see below
+    spawn_data_source:"./resources/maps/desert_spawn.csv",
+    spawn_data:[], //gets populated through import -> see below
     enemy_count:0
   }
     ]
@@ -79,6 +85,14 @@ let world = [
     });
     xhttp_visibility_data.open("GET", world[1].visibility_data_source, true);
     xhttp_visibility_data.send();
+
+    var xhttp_spawn_data = new XMLHttpRequest();
+    xhttp_spawn_data.addEventListener("load", function() {
+      var arr  = xhttp_spawn_data.responseText.replace(/\n/g,",").split(",");
+      world[1].spawn_data = arr.map(Number);
+    });
+    xhttp_spawn_data.open("GET", world[1].spawn_data_source, true);
+    xhttp_spawn_data.send();
 //  }
 //}
 

@@ -21,6 +21,7 @@ let map = {
   object_data:null,
   obstacle_data:null,
   visibility_data:null,
+  spawn_data:null,
   enemy_count:null
 };
 let game_state = 0; // 0 = preload / 1 = start_menu / 2 = play / 3 = gameover
@@ -144,6 +145,7 @@ let cursor_type = {
 }
 let obstacle = [];
 let visibility = [];
+let spawn = [];
 let grave = [];
 let blood = {
   pos_x:[],
@@ -300,6 +302,7 @@ function init() {
   document.getElementById("game_menu").style.display = "block";
   createMap();
   createObstacles();
+  createSpawn();
   createEnemies();
   createWildlife();
   createVisibility();
@@ -312,6 +315,7 @@ function createMap() {
   map.object_data = world[level].object_data;
   map.obstacle_data = world[level].obstacle_data;
   map.visibility_data = world[level].visibility_data;
+  map.spawn_data = world[level].spawn_data;
   map.enemy_count = world[level].enemy_count;
 }
 
@@ -341,8 +345,35 @@ function createObstacles() {
     }
 }
 
+function createSpawn() {
+    //create possible spawn positions for enemies
+    var value_spawn_number;
+    var value_spawn_data;
+    var value_spawn_data_x;
+    var value_spawn_data_y;
+    for(i_row_nr=0;i_row_nr<map.height/sprite.map_height;i_row_nr++) {
+      for(i_col_nr=0;i_col_nr<map.width/sprite.map_width;i_col_nr++) {
+        if (map.spawn_data[((i_row_nr*map.width/sprite.map_width)+i_col_nr)] == 2) { //2 = spawn position for enemies
+          value_spawn_number = ((i_row_nr*map.width/sprite.map_width)+i_col_nr);
+          value_spawn_data = map.spawn_data[((i_row_nr*map.width/sprite.map_width)+i_col_nr)];
+          value_spawn_data_x = (value_spawn_number % (map.width/sprite.map_width) * sprite.obstacle_width);
+          value_spawn_data_y = Math.floor(value_spawn_number/(map.width/sprite.map_width)) * sprite.obstacle_height;
+          spawn.push({
+            id:value_spawn_number,
+            data:value_spawn_data,
+            pos_x:value_spawn_data_x,
+            pos_y:value_spawn_data_y,
+            width:sprite.obstacle_width,
+            height:sprite.obstacle_height
+          });
+        }
+      }
+    }
+}
+
 function createEnemies() {
   for(i_create_enemies=0;i_create_enemies<map.enemy_count;i_create_enemies++) {
+    var position_source = roll(spawn.length);
     enemy.push({
       hp_max:5,
       hp:5,
@@ -356,8 +387,8 @@ function createEnemies() {
       d_up:false,
       d_down:false,
       stop:false,
-      pos_x:roll(map.width),
-      pos_y:roll(map.height),
+      pos_x:spawn[position_source].pos_x,
+      pos_y:spawn[position_source].pos_y,
       visibility: true,
       footprint:[],
       speed:1,
