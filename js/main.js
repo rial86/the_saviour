@@ -124,12 +124,10 @@ let wildlife = [];
 let sprite = {
   chars_width:48,
   chars_height:48,
-  map_width:32,
-  map_height:32,
+  tile_width:32,
+  tile_height:32,
   blood_width:512,
   blood_height:512,
-  obstacle_width:32,
-  obstacle_height:32,
   grave_width:22,
   grave_height:32,
   scorpion_width:6,
@@ -300,15 +298,16 @@ function toggle(a,b) {
 function init() {
   document.getElementById("game_frame").style.display = "none";
   document.getElementById("game_menu").style.display = "block";
-  createMap();
-  createObstacles();
-  createSpawn();
+  initMap();
+  createMapData("Obstacles");
+  createMapData("Visibility");
+  createMapData("Spawn");
   createEnemies();
   createWildlife();
-  createVisibility();
+
 }
 
-function createMap() {
+function initMap() {
   map.width = world[level].width;
   map.height = world[level].height;
   map.floor_data = world[level].floor_data;
@@ -319,52 +318,46 @@ function createMap() {
   map.enemy_count = world[level].enemy_count;
 }
 
-function createObstacles() {
-    var value_obstacle_number;
-    var value_obstacle_data;
-    var value_obstacle_data_x;
-    var value_obstacle_data_y;
-    for(i_row_nr=0;i_row_nr<map.height/sprite.map_height;i_row_nr++) {
-      for(i_col_nr=0;i_col_nr<map.width/sprite.map_width;i_col_nr++) {
-        if (map.obstacle_data[((i_row_nr*map.width/sprite.map_width)+i_col_nr)] == 0) {
-          value_obstacle_number = ((i_row_nr*map.width/sprite.map_width)+i_col_nr);
-          value_obstacle_data = map.obstacle_data[((i_row_nr*map.width/sprite.map_width)+i_col_nr)];
-          value_obstacle_data_x = (value_obstacle_number % (map.width/sprite.map_width) * sprite.obstacle_width);
-          value_obstacle_data_y = Math.floor(value_obstacle_number/(map.width/sprite.map_width)) * sprite.obstacle_height;
-          obstacle.push({
-            id:value_obstacle_number,
-            data:value_obstacle_data,
-            pos_x:value_obstacle_data_x,
-            pos_y:value_obstacle_data_y,
-            width:sprite.obstacle_width,
-            height:sprite.obstacle_height,
+function createMapData(a) {
+  var source; // source object and property from where data is loaded
+  var id; // id that is checked in the load process
+  var destination; // destination object where the data is stored
+  switch (a) {
+    case "Obstacles":
+      source = map.obstacle_data;
+      id = 0;
+      destination = obstacle;
+    break;
+    case "Visibility":
+      source = map.visibility_data;
+      id = 0;
+      destination = visibility;
+    break;
+    case "Spawn":
+      source = map.spawn_data;
+      id = 2;
+      destination = spawn;
+    break;
+  }
+    var value_number;
+    var value_data;
+    var value_data_x;
+    var value_data_y;
+    for(i_row_nr=0;i_row_nr<map.height/sprite.tile_height;i_row_nr++) {
+      for(i_col_nr=0;i_col_nr<map.width/sprite.tile_width;i_col_nr++) {
+        if (source[((i_row_nr*map.width/sprite.tile_width)+i_col_nr)] == id) {
+          value_number = ((i_row_nr*map.width/sprite.tile_width)+i_col_nr);
+          value_data = source[((i_row_nr*map.width/sprite.tile_width)+i_col_nr)];
+          value_data_x = (value_number % (map.width/sprite.tile_width) * sprite.tile_width);
+          value_data_y = Math.floor(value_number/(map.width/sprite.tile_width)) * sprite.tile_height;
+          destination.push({
+            id:value_number,
+            data:value_data,
+            pos_x:value_data_x,
+            pos_y:value_data_y,
+            width:sprite.tile_width,
+            height:sprite.tile_height,
             bulletproof:true
-          });
-        }
-      }
-    }
-}
-
-function createSpawn() {
-    //create possible spawn positions for enemies
-    var value_spawn_number;
-    var value_spawn_data;
-    var value_spawn_data_x;
-    var value_spawn_data_y;
-    for(i_row_nr=0;i_row_nr<map.height/sprite.map_height;i_row_nr++) {
-      for(i_col_nr=0;i_col_nr<map.width/sprite.map_width;i_col_nr++) {
-        if (map.spawn_data[((i_row_nr*map.width/sprite.map_width)+i_col_nr)] == 2) { //2 = spawn position for enemies
-          value_spawn_number = ((i_row_nr*map.width/sprite.map_width)+i_col_nr);
-          value_spawn_data = map.spawn_data[((i_row_nr*map.width/sprite.map_width)+i_col_nr)];
-          value_spawn_data_x = (value_spawn_number % (map.width/sprite.map_width) * sprite.obstacle_width);
-          value_spawn_data_y = Math.floor(value_spawn_number/(map.width/sprite.map_width)) * sprite.obstacle_height;
-          spawn.push({
-            id:value_spawn_number,
-            data:value_spawn_data,
-            pos_x:value_spawn_data_x,
-            pos_y:value_spawn_data_y,
-            width:sprite.obstacle_width,
-            height:sprite.obstacle_height
           });
         }
       }
@@ -437,31 +430,6 @@ function createWildlife() {
       width:sprite.scorpion_width,
       height:sprite.scorpion_height
     });
-  }
-}
-
-function createVisibility() {
-  var value_visibility_number;
-  var value_visibility_data;
-  var value_visibility_data_x;
-  var value_visibility_data_y;
-  for(i_row_nr=0;i_row_nr<map.height/sprite.map_height;i_row_nr++) {
-    for(i_col_nr=0;i_col_nr<map.width/sprite.map_width;i_col_nr++) {
-      if (map.visibility_data[((i_row_nr*map.width/sprite.map_width)+i_col_nr)] == 0) {
-        value_visibility_number = ((i_row_nr*map.width/sprite.map_width)+i_col_nr);
-        value_visibility_data = map.visibility_data[((i_row_nr*map.width/sprite.map_width)+i_col_nr)];
-        value_visibility_data_x = (value_visibility_number % (map.width/sprite.map_width) * sprite.obstacle_width);
-        value_visibility_data_y = Math.floor(value_visibility_number/(map.width/sprite.map_width)) * sprite.obstacle_height;
-        visibility.push({
-          id:value_visibility_number,
-          data:value_visibility_data,
-          pos_x:value_visibility_data_x,
-          pos_y:value_visibility_data_y,
-          width:sprite.obstacle_width,
-          height:sprite.obstacle_height
-        });
-      }
-    }
   }
 }
 
@@ -824,22 +792,22 @@ function clearCamera() {
 function renderMap() {
   let canvas = document.getElementById("map");
   let ctx = canvas.getContext("2d");
-  let start_col = Math.floor(-camera_view.pos_y/sprite.map_height);
-  let start_row = Math.floor(-camera_view.pos_x/sprite.map_width);
-  let end_col = start_col+Math.ceil(camera_view.height/sprite.map_height);
-  let end_row = start_row+Math.ceil(camera_view.width/sprite.map_width);
+  let start_col = Math.floor(-camera_view.pos_y/sprite.tile_height);
+  let start_row = Math.floor(-camera_view.pos_x/sprite.tile_width);
+  let end_col = start_col+Math.ceil(camera_view.height/sprite.tile_height);
+  let end_row = start_row+Math.ceil(camera_view.width/sprite.tile_width);
   for(i_col_nr=start_col;i_col_nr<=end_col;i_col_nr++) {
     for(i_row_nr=start_row;i_row_nr<=end_row;i_row_nr++) {
       //render floor
-      var value_floor_data = map.floor_data[((i_col_nr*map.width/sprite.map_width)+i_row_nr)];
-      var source_y = Math.floor(value_floor_data / 56) * sprite.map_height; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
-      var source_x = (value_floor_data % 56) * sprite.map_width; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
-      ctx.drawImage(images.tileset_map,source_x,source_y,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
+      var value_floor_data = map.floor_data[((i_col_nr*map.width/sprite.tile_width)+i_row_nr)];
+      var source_y = Math.floor(value_floor_data / 56) * sprite.tile_height; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
+      var source_x = (value_floor_data % 56) * sprite.tile_width; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
+      ctx.drawImage(images.tileset_map,source_x,source_y,sprite.tile_width,sprite.tile_height,i_row_nr*sprite.tile_width+camera_view.pos_x,i_col_nr*sprite.tile_height+camera_view.pos_y,sprite.tile_width,sprite.tile_height);
       //render objects
-      var value_object_data = map.object_data[((i_col_nr*map.width/sprite.map_width)+i_row_nr)];
-      var source_y = Math.floor(value_object_data / 56) * sprite.map_height; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
-      var source_x = (value_object_data % 56) * sprite.map_width; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
-      ctx.drawImage(images.tileset_map,source_x,source_y,sprite.map_width,sprite.map_height,i_row_nr*sprite.map_width+camera_view.pos_x,i_col_nr*sprite.map_height+camera_view.pos_y,sprite.map_width,sprite.map_height);
+      var value_object_data = map.object_data[((i_col_nr*map.width/sprite.tile_width)+i_row_nr)];
+      var source_y = Math.floor(value_object_data / 56) * sprite.tile_height; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
+      var source_x = (value_object_data % 56) * sprite.tile_width; //16 is the number of columns of the tileset used for the map, this number may vary depending on tilset size
+      ctx.drawImage(images.tileset_map,source_x,source_y,sprite.tile_width,sprite.tile_height,i_row_nr*sprite.tile_width+camera_view.pos_x,i_col_nr*sprite.tile_height+camera_view.pos_y,sprite.tile_width,sprite.tile_height);
     }
   }
 
